@@ -1,3 +1,17 @@
+try:
+    import sys
+    import random
+    import math
+    import os
+    import getopt
+    import pygame
+    from socket import *
+    from pygame.locals import *
+except ImportError as err:
+    print("couldn't load module.")
+    sys.exit(2)
+
+
 ##fonction chargement de l'image d'objet (Bale, Barre, brick)
 def load_item_image(name):
     fileName = os.path.join('data', name)
