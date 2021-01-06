@@ -1,4 +1,5 @@
 from main import *
+from graphicalItems import *
 
 
 class Ball(pygame.sprite.Sprite):
@@ -44,16 +45,16 @@ class Ball(pygame.sprite.Sprite):
                 self.oob = True
 
         # check for collision with paddle
-        if self.rect.colliderect(Player.rect):
+        if self.rect.colliderect(self.rect):
             # fix ball's y
-            self.rect.y = Player.rect.y - self.rect.height
+            self.rect.y = self.rect.y - self.rect.height
             # horizontal bounce
             angle = -angle
         # check for collision with bricks
-        for brick in bricks:
+        for brick in pygame.sprite.Group():
             if self.rect.colliderect(brick.rect) == 1 and not self.hit:
-                bricks.remove(brick)
-                all_sprites_list.remove(brick)
+                pygame.sprite.Group().remove(brick)
+                pygame.sprite.Group().remove(brick)
                 quad = ((angle * (180 / math.pi)) % 360) // 90
                 bt = Rect(brick.rect.x, brick.rect.y, brick.rect.width, 1)
                 bb = Rect(brick.rect.x, brick.rect.y +

@@ -18,6 +18,7 @@ BALL_HEIGHT = 11
 SCORE = 0
 LIVES = 3
 
+
 try:
     import sys
     import random
@@ -32,7 +33,7 @@ try:
     from socket import *
     from pygame.locals import *
 except ImportError as err:
-    print("couldn't load module. %s" % (err))
+    print("couldn't load module. %s" % err)
     sys.exit(2)
 
 
@@ -46,30 +47,19 @@ def main():
     background = background.convert()
     background.fill((0, 0, 0))
 
-    # used for list of all sprites
-    global all_sprites_list
-    all_sprites_list = pygame.sprite.Group()
-
-    # initiliaze bricks, contains all brick sprites, create Group object of bricks.
-    global bricks
-    bricks = pygame.sprite.Group()
     make_level(level)
 
     # initialize player
-    global player
     player = Player((SCREEN_WIDTH / 2) - (PLAYER_WIDTH / 2),
                     SCREEN_HEIGHT - PLAYER_HEIGHT)
-    all_sprites_list.add(player)
+    pygame.sprite.Group().add(player)
 
     # initialize ball
     speed = 4
-    rand = ((0.1 * (random.randint(5, 8))))
-    ball = Ball(player.rect.centerx - (BALL_WIDTH / 2),
-                player.rect.y - BALL_HEIGHT, (.743723, speed))
-    all_sprites_list.add(ball)
+    rand = ((0.1*(random.randint(5, 8))))
+    ball = Ball(player.rect.centerx - (BALL_WIDTH / 2), player.rect.y - BALL_HEIGHT, (.743723, speed))
+    pygame.sprite.Group().add(ball)
 
-    # initialize sprites
-    ballsprite = pygame.sprite.RenderPlain(ball)
 
     # blit background to screen
     screen.blit(background, (0, 0))
@@ -101,15 +91,15 @@ def main():
         # for sprite in all_sprites_list:
         #	screen.blit(background, sprite.rect, sprite.rect)
         # check for movement of ball
-        ballsprite.update()
-        if ball.oob == True:
+        pygame.sprite.RenderPlain(ball).update()
+        if ball.oob:
             print("ball out of bounds. you suck")
-            # lives -= 1
+            #lives -= 1
             # reset()
             break
 
         # why is this here?
-        all_sprites_list.draw(screen)
+        pygame.sprite.Group().draw(screen)
 
         # And this?
         pygame.display.flip()

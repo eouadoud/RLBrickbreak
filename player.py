@@ -1,4 +1,5 @@
 from main import *
+from graphicalItems import *
 
 
 class Player(pygame.sprite.Sprite):
@@ -12,7 +13,7 @@ class Player(pygame.sprite.Sprite):
         self.image, self.rect = load_item_image('paddle.png')
         self.rect.x = x
         self.rect.y = y
-        pygame.sprite.Sprite.__init__(self, all_sprites_list)
+        pygame.sprite.Sprite.__init__(self)
 
     # paddle's move function
 

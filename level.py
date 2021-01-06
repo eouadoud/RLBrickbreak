@@ -1,8 +1,14 @@
+import pygame
+
+from brick import *
+
+
 # class Level(pygame.sprite.Sprite):
 # nothing for now
 
 
 # define testing level
+
 level = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -30,5 +36,5 @@ def make_level(level):
                 brick = Brick(0, 0)
                 brick.rect.x = (brick.rect.width + 3) * j
                 brick.rect.y = (brick.rect.height + 3) * i
-                bricks.add(brick)
-                all_sprites_list.add(brick)
+                pygame.sprite.Group().add(brick)
+                pygame.sprite.Group().add(brick)
