@@ -1,13 +1,12 @@
-from main import *
-from graphicalItems import *
+import pygame
+
+image = pygame.image.load("brick.jpg")
 
 
 class Brick(pygame.sprite.Sprite):
-    """ brick object """
-
-    def __init__(self, posx, posy):
-        pygame.sprite.Sprite.__init__(self)
-        self.image, self.rect = load_item_image('brick.png')
-        self.rect.x = posx
-        self.rect.y = posy
-        pygame.sprite.Sprite.__init__(self)
+    def __init__(self, brick_width, brick_height):
+        super(Brick, self).__init__()
+        self.brick_width = brick_width
+        self.brick_height = brick_height
+        self.image = pygame.transform.scale(pygame.image.load("brick.jpg"), (self.brick_width, self.brick_height))
+        self.rect = self.image.get_rect()
