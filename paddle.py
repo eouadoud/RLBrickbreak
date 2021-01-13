@@ -7,7 +7,7 @@ class Paddle(pygame.sprite.Sprite):
         super(Paddle, self).__init__()
         self.paddle_width = 300
         self.paddle_height = 20
-        self.image = pygame.transform.scale(pygame.image.load("paddle.png"), (self.paddle_width, self.paddle_height))
+        self.image = pygame.transform.scale(pygame.image.load("data/paddle.png"), (self.paddle_width, self.paddle_height))
         self.rect = self.image.get_rect()
 
     def moveRight(self, pixels):

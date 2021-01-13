@@ -9,7 +9,7 @@ class Ball(pygame.sprite.Sprite):
         super(Ball, self).__init__()
         self.ball_width = 25
         self.ball_height = 25
-        self.image = pygame.transform.scale(pygame.image.load("basketball.png"), (self.ball_width, self.ball_height))
+        self.image = pygame.transform.scale(pygame.image.load("./data/basketball.png"), (self.ball_width, self.ball_height))
         self.rect = self.image.get_rect()
         self.screenheight = pygame.display.get_surface().get_height()
         self.screenwidth = pygame.display.get_surface().get_width()

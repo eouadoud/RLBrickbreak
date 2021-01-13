@@ -104,3 +104,4 @@ def game_init():
         text_to_screen(screen, "Balls left: " + str(ball.count - 1), 10, 10)
         pygame.display.flip()
         clock.tick(120)
+
