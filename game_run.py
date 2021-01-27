@@ -118,7 +118,7 @@ class Envirement(object):
     def hitDetect(self):
         ##Detections des collisions
         ball_rect = pygame.Rect(self.ball_x - ball_radius, self.ball_y - ball_radius, ball_radius * 2,
-                                ball_radius * 2)  # circles are measured from the center, so have to subtract 1 radius from the x and y
+                                ball_radius * 2)
         paddle_rect = pygame.Rect(self.paddle_x, self.paddle_y, paddle_width, paddle_height)
 
         # vérification si la balle touche le bas (perte)
@@ -162,7 +162,6 @@ class Envirement(object):
                 self.score = self.score + 1
                 self.bricks.remove(brick)
                 self.ball_speed_y = - self.ball_speed_y
-                # self.current_reward = STATES['Scores']
 
         if self.ball_hit_count > 3:
             self.randomAngle()
@@ -177,12 +176,10 @@ class Envirement(object):
                 if event.key == pygame.K_LEFT:
                     self.command = 1
                     self.isPressed = True
-                    # self.paddle_vec -= self.paddle_speed
 
                 elif event.key == pygame.K_RIGHT:
                     self.command = 2
                     self.isPressed = True
-                    # self.paddle_vec += self.paddle_speed
                 elif event.key == pygame.K_a:
                     self.isAuto = not self.isAuto
 
@@ -209,16 +206,9 @@ class Envirement(object):
             self.command = com_command
 
         if self.command == 1:
-            # self.paddle_vec -= self.paddle_speed
             self.paddle_x -= self.paddle_speed
         elif self.command == 2:
-            # self.paddle_vec += self.paddle_speed
             self.paddle_x += self.paddle_speed
-        # else:
-        # if self.paddle_vec >0:
-        # self.paddle_vec -= self.paddle_speed
-        # elif self.paddle_vec < 0:
-        # self.paddle_vec += self.paddle_speed
 
     def observe(self):
         prev_Q = self.Q[int(self.prev[0]), int(self.prev[1]), int(self.command)]
@@ -260,24 +250,18 @@ class Envirement(object):
 def save():
     savedata = game.saveData()
     np.savez(fname, iter=savedata[0], high=savedata[1], trainedQ=savedata[2])
-    print("Data saved successfully.")
+    print("Donnes enregistres.")
 
 
 if len(sys.argv) > 1:
-    fname = str(sys.argv[1]).replace('.npz', '')
+    fName = str(sys.argv[1]).replace('.npz', '')
 
     try:
-        data = np.load(str(fname) + '.npz')
+        data = np.load(str(fName) + '.npz')
         game = Envirement(data)
-        s = "Q loaded from " + str(fname) + " successfully."
-        print(s)
-
     except IOError:
-        s = "Error: can't find file or read data from " + str(fname) + ".npz, initializing a new Q matrix"
-        print(s)
         game = Envirement(None)
 
-    # game loop
     while game.input():
         game.decision()
         game.update()
@@ -285,5 +269,3 @@ if len(sys.argv) > 1:
         game.draw()
 
     game.quit()
-else:
-    print('INPUT ERROR: no file name provided. Read README.md for help.')
