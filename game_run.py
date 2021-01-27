@@ -40,93 +40,6 @@ class Brick:
         self.rect = pygame.Rect(self.x, self.y, block_width, block_height)
 
 
-class Agent:
-
-    def __init__(self):
-        self.bricks = []
-        self.ball_speed_y = 5
-        self.ball_speed_x = 3
-        self.ball_y = 450 - ball_radius
-        self.ball_x = 300
-        self.paddle_x = 470
-        self.paddle_y = 470
-        self.paddle_speed = 10
-        self.com_vec = 0
-        self.current_reward = STATES['Alive']
-        self.score = 0
-        self.ball_hit_count = 0
-        self.paddle_hit_count = 0
-        self.highScore = 0
-        self.isAuto = True
-        self.command = 0
-        self.iteration = 0
-        self.Q = np.zeros((int(1299 / resolution), int(490 / resolution), 3))
-        self.prev = [int((self.ball_x - self.paddle_x + 640) / resolution), int(self.ball_y / resolution)]
-
-    def decision(self):
-
-        # Observe what state is in and perform the action that maximizes expected reward.
-        actions = self.Q[int((self.ball_x - self.paddle_x + 640) / resolution), int(self.ball_y / resolution), :]
-
-        maxs = [i for i, x in enumerate(actions) if x == np.argmax(actions)]
-        if len(maxs) > 1:
-            if self.command in maxs:
-                com_command = self.command
-            else:
-                com_command = random.choice(maxs)
-        else:
-            com_command = np.argmax(actions)
-
-        if self.isAuto is True:
-            self.command = com_command
-
-        if self.command == 1:
-            self.paddle_x -= self.paddle_speed
-        elif self.command == 2:
-            self.paddle_x += self.paddle_speed
-
-        print(f"actions: {actions}")
-        print(f"maxs: {maxs}")
-
-    def observe(self):
-        prev_Q = self.Q[self.prev[0], self.prev[1], self.command]
-
-        self.Q[self.prev[0], self.prev[1], self.command] = (
-                prev_Q + alpha * (self.current_reward + l *
-                                  max(self.Q[int(self.ball_x - self.paddle_x + 640 / resolution),
-                                      int(self.ball_y / resolution), :]) - prev_Q))
-
-
-# class Agent:
-#     def __init__(self, environment):
-#         self.environment = environment
-#         self.policy = Policy(environment.states, ACTIONS)
-#         self.reset()
-
-
-# class Policy:
-#     def __init__(self):
-#         self.bricks = []
-#         self.ball_speed_y = 5
-#         self.ball_speed_x = 3
-#         self.ball_y = 450 - ball_radius
-#         self.ball_x = 300
-#         self.paddle_x = 470
-#         self.paddle_y = 470
-#         self.paddle_speed = 10
-#         self.com_vec = 0
-#
-#         self.score = 0
-#         self.ball_hit_count = 0
-#         self.paddle_hit_count = 0
-#         self.highScore = 0
-#         self.isAuto = True
-#         self.command = 0
-#         self.iteration = 0
-#         self.Q = np.zeros((int(1280 // resolution), int(480 // resolution), 3))
-#         self.screen = pygame.display.set_mode([640, 480])
-
-
 class Environment:
 
     def __init__(self, myData):
@@ -314,28 +227,85 @@ def save():
     print("Data saved successfully.")
 
 
-if len(sys.argv) > 1:
-    fname = str(sys.argv[1]).replace('.npz', '')
+class Agent:
 
-    try:
-        data = np.load(str(fname) + '.npz')
-        game_run = Environment(data)
-        s = "Q loaded from " + str(fname) + " successfully."
-        print(s)
+    def __init__(self):
+        self.bricks = []
+        self.ball_speed_y = 5
+        self.ball_speed_x = 3
+        self.ball_y = 450 - ball_radius
+        self.ball_x = 300
+        self.paddle_x = 470
+        self.paddle_y = 470
+        self.paddle_speed = 10
+        self.com_vec = 0
+        self.current_reward = STATES['Alive']
+        self.score = 0
+        self.ball_hit_count = 0
+        self.paddle_hit_count = 0
+        self.highScore = 0
+        self.isAuto = True
+        self.command = 0
+        self.iteration = 0
+        self.Q = np.zeros((int(1299 / resolution), int(490 / resolution), 3))
+        self.prev = [int((self.ball_x - self.paddle_x + 640) / resolution), int(self.ball_y / resolution)]
 
-    except IOError:
-        s = "Error: can't find file or read data from " + str(fname) + ".npz, initializing a new Q matrix"
-        print(s)
-        game_run = Environment(None)
+    def decision(self):
 
-    agent = Agent()
-    # game loop
-    while game_run.input():
-        agent.decision()
-        game_run.update()
-        agent.observe()
-        game_run.draw()
+        # Observe what state is in and perform the action that maximizes expected reward.
+        actions = self.Q[int((self.ball_x - self.paddle_x + 640) / resolution), int(self.ball_y / resolution), :]
 
-    game_run.quit()
-else:
-    print('INPUT ERROR: no file name provided. Read README.md for help.')
+        maxs = [i for i, x in enumerate(actions) if x == np.argmax(actions)]
+        if len(maxs) > 1:
+            if self.command in maxs:
+                com_command = self.command
+            else:
+                com_command = random.choice(maxs)
+        else:
+            com_command = np.argmax(actions)
+
+        if self.isAuto is True:
+            self.command = com_command
+
+        if self.command == 1:
+            self.paddle_x -= self.paddle_speed
+        elif self.command == 2:
+            self.paddle_x += self.paddle_speed
+
+        print(f"actions: {actions}")
+        print(f"maxs: {maxs}")
+
+    def observe(self):
+        prev_Q = self.Q[self.prev[0], self.prev[1], self.command]
+
+        self.Q[self.prev[0], self.prev[1], self.command] = (
+                prev_Q + alpha * (self.current_reward + l *
+                                  max(self.Q[int(self.ball_x - self.paddle_x + 640 / resolution),
+                                      int(self.ball_y / resolution), :]) - prev_Q))
+
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        fname = str(sys.argv[1]).replace('.npz', '')
+
+        try:
+            data = np.load(str(fname) + '.npz')
+            game_run = Environment(data)
+            s = "Q loaded from " + str(fname) + " successfully."
+            print(s)
+
+        except IOError:
+            s = "Error: can't find file or read data from " + str(fname) + ".npz, initializing a new Q matrix"
+            print(s)
+            game_run = Environment(None)
+
+        agent = Agent()
+        # game loop
+        while game_run.input():
+            agent.decision()
+            game_run.update()
+            agent.observe()
+            game_run.draw()
+
+        game_run.quit()
+    else:
+        print('INPUT ERROR: no file name provided. Read README.md for help.')
