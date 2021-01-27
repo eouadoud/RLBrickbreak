@@ -28,11 +28,8 @@ STATES = {
 
 # the game's constant variables
 ball_radius = 10
-paddle_width = 300
-paddle_height = 20
-
-
-# paddle_max_vec = 15
+paddle_width = 200
+paddle_height = 10
 
 
 class Brick:
@@ -63,7 +60,7 @@ class Environment:
         self.isAuto = True
         self.command = 0
         self.iteration = 0
-        self.Q = np.zeros((int(1280 // resolution), int(480 // resolution), 3))
+        self.Q = np.zeros((int(1299 / resolution), int(490 / resolution), 3))
         self.prev = [int((self.ball_x - self.paddle_x + 640) / resolution), int(self.ball_y / resolution)]
 
     def decision(self):
@@ -90,6 +87,9 @@ class Environment:
             # self.paddle_vec += self.paddle_speed
             self.paddle_x += self.paddle_speed
 
+        print(f"actions: {actions}")
+        print(f"maxs: {maxs}")
+
     def observe(self):
         prev_Q = self.Q[self.prev[0], self.prev[1], self.command]
 
@@ -97,7 +97,7 @@ class Environment:
                 prev_Q + alpha * (self.current_reward + l *
                                   max(self.Q[int(self.ball_x - self.paddle_x + 640 / resolution),
                                       int(self.ball_y / resolution), :]) - prev_Q))
-        print(f"test {self.Q}")
+
 
 
 # class Agent:
@@ -128,32 +128,17 @@ class Environment:
 #         self.iteration = 0
 #         self.Q = np.zeros((int(1280 // resolution), int(480 // resolution), 3))
 #         self.screen = pygame.display.set_mode([640, 480])
-#
-#
+
 
 
 class Breakout:
 
     def __init__(self, myData):
-
-        self.bricks = []
-        self.ball_speed_y = 5
-        self.ball_speed_x = 3
-        self.ball_y = 450 - ball_radius
-        self.ball_x = 300
-        self.paddle_x = 470
-        self.paddle_y = 470
-        self.paddle_speed = 10
-        self.com_vec = 0
-
-        self.score = 0
-        self.ball_hit_count = 0
-        self.paddle_hit_count = 0
-        self.highScore = 0
+        self.highscore = 0
         self.isAuto = True
         self.command = 0
         self.iteration = 0
-        self.Q = np.zeros((int(1280 // resolution), int(480 // resolution), 3))
+        self.Q = np.zeros((int(1299 / resolution), int(490 / resolution), 3))
 
         if myData is not None:
             try:
@@ -171,33 +156,43 @@ class Breakout:
 
         self.resetGame()
 
-        self.screen = pygame.display.set_mode([640, 480])
+        self.screen = pygame.display.set_mode([800, 490])
         self.myfont = pygame.font.SysFont("Arial", 30)
 
     def initBricks(self):
+        self.bricks = []
         for i in range(1, 9):
             for j in range(1, 5):
-                temp = Brick(70 * i - 35, 50 + 20 * j)
+                temp = Brick(90 * i - 35, 50 + 20 * j)
                 self.bricks.append(temp)
 
     def resetGame(self):
         # pygame.time.wait(2000)
+        self.ball_x = 300
+        self.ball_y = 450 - ball_radius
+        self.ball_speed_x = 3
+        self.ball_speed_y = 5
+
         self.randomAngle()
+        self.paddle_x = 300
+        self.paddle_y = 470
+        self.paddle_speed = 10
+        # self.paddle_vec = 0
+        self.com_vec = 0
+
+        self.score = 0
+        self.ball_hit_count = 0
+        self.paddle_hit_count = 0
         self.initBricks()
 
     def update(self):
-        # if paddle_max_vec < abs(self.paddle_vec):
-        #    self.paddle_vec = paddle_max_vec * self.paddle_vec / abs(self.paddle_vec)
-
-        # self.paddle_x += self.paddle_vec
-
         if self.paddle_x < 0:
             self.paddle_x = 0
         if self.paddle_x > self.screen.get_width() - paddle_width:
             self.paddle_x = self.screen.get_width() - paddle_width
 
         self.current_reward = STATES['Alive']
-        # MOVE THE BALL
+        # Move ball
         self.ball_y += self.ball_speed_y
         self.ball_x += self.ball_speed_x
         self.hitDetect()
@@ -211,11 +206,12 @@ class Breakout:
 
     def hitDetect(self):
         # COLLISION DETECTION
+        # circles are measured from the center, so have to subtract 1 radius from the x and y
         ball_rect = pygame.Rect(self.ball_x - ball_radius, self.ball_y - ball_radius, ball_radius * 2,
-                                ball_radius * 2)  # circles are measured from the center, so have to subtract 1 radius from the x and y
+                                ball_radius * 2)
         paddle_rect = pygame.Rect(self.paddle_x, self.paddle_y, paddle_width, paddle_height)
 
-        # check if the ball is off the bottom of the self.screen
+        # check if ball is off the bottom of the self.screen
         if self.ball_y > self.screen.get_height() - ball_radius:
 
             self.current_reward = STATES['Dead']
@@ -249,6 +245,7 @@ class Breakout:
             self.current_reward = STATES['Hit']
             self.ball_hit_count += 1
             self.paddle_hit_count += 1
+            # if pygame.display.get_active():
 
             if len(self.bricks) == 0:
                 self.initBricks()
@@ -297,7 +294,7 @@ class Breakout:
         self.screen.blit(count_label, (70, 10))
 
         if self.isAuto is True:
-            auto_label = self.myfont.render("Auto", 100, pygame.color.THECOLORS['red'])
+            auto_label = self.myfont.render("Mode = Auto", 100, pygame.color.THECOLORS['blue'])
             self.screen.blit(auto_label, (570, 10))
         for brick in self.bricks:
             pygame.draw.rect(self.screen, grey, brick.rect, 0)
