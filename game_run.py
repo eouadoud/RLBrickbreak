@@ -3,21 +3,19 @@ import random
 import sys
 
 import numpy as np
-
 import pygame
 
-black = [0, 0, 0]
-white = [255, 255, 255]
-grey = [180, 180, 180]
+grey_bc = [180, 180, 180]
+brown_color = [120, 80, 60]
 
 block_width = 60
 block_height = 12
 
-fname = 'dataset_breakout'
+fname = 'RL_Brik_Breaker'
 
 resolution = 10
 alpha = 0.5
-l = 0.9  # lambda
+lmbd = 0.9
 
 STATES = {
     'Alive': 0,
@@ -26,13 +24,12 @@ STATES = {
     'Hit': 1
 }
 
-# the game's constant variables
 ball_radius = 10
-paddle_width = 200
+paddle_width = 80
 paddle_height = 10
 
 
-class Brick:
+class Brick():
 
     def __init__(self, x, y):
         self.x = x
@@ -40,32 +37,32 @@ class Brick:
         self.rect = pygame.Rect(self.x, self.y, block_width, block_height)
 
 
-class Environment:
+class Envirement(object):
 
-    def __init__(self, myData):
+    def __init__(self, data):
+
         self.highscore = 0
         self.isAuto = True
         self.command = 0
         self.iteration = 0
-        self.Q = np.zeros((int(1299 / resolution), int(490 / resolution), 3))
+        self.Q = np.zeros((1280 // resolution, 480 // resolution, 3))
 
-        if myData is not None:
+        if data is not None:
             try:
-                self.iteration = int(myData['iter'])
-                self.highScore = int(myData['high'])
-                self.Q = myData['trainedQ']
+                self.iteration = int(data['iter'])
+                self.highscore = int(data['high'])
+                self.Q = data['trainedQ']
             except:
                 print("Can't load data from input file, wrong format.")
                 raise
 
         pygame.init()
 
-        # allows for holding of key
         pygame.key.set_repeat(1, 0)
 
         self.resetGame()
 
-        self.screen = pygame.display.set_mode([800, 490])
+        self.screen = pygame.display.set_mode([800, 480])
         self.myfont = pygame.font.SysFont("Arial", 30)
 
     def initBricks(self):
@@ -76,66 +73,69 @@ class Environment:
                 self.bricks.append(temp)
 
     def resetGame(self):
-        # pygame.time.wait(2000)
+
         self.ball_x = 300
         self.ball_y = 450 - ball_radius
         self.ball_speed_x = 3
         self.ball_speed_y = 5
 
         self.randomAngle()
+
         self.paddle_x = 300
         self.paddle_y = 470
         self.paddle_speed = 10
-        # self.paddle_vec = 0
+
         self.com_vec = 0
 
         self.score = 0
         self.ball_hit_count = 0
         self.paddle_hit_count = 0
+
         self.initBricks()
 
     def update(self):
+
         if self.paddle_x < 0:
             self.paddle_x = 0
+
         if self.paddle_x > self.screen.get_width() - paddle_width:
             self.paddle_x = self.screen.get_width() - paddle_width
 
         self.current_reward = STATES['Alive']
-        # Move ball
+        # Mouvement du ballon
         self.ball_y += self.ball_speed_y
         self.ball_x += self.ball_speed_x
+
         self.hitDetect()
 
     def randomAngle(self):
         self.ball_y = 450 - ball_radius
-        ran = random.randint(-1, 0)
+        ran = random.randint(0, 4)
         self.ball_speed_x = (7 - ran) * self.ball_speed_x / abs(self.ball_speed_x)
         self.ball_speed_y = (3 + ran) * self.ball_speed_y / abs(self.ball_speed_y)
         self.ball_hit_count = 0
 
     def hitDetect(self):
-        # COLLISION DETECTION
-        # circles are measured from the center, so have to subtract 1 radius from the x and y
+        ##Detections des collisions
         ball_rect = pygame.Rect(self.ball_x - ball_radius, self.ball_y - ball_radius, ball_radius * 2,
-                                ball_radius * 2)
+                                ball_radius * 2)  # circles are measured from the center, so have to subtract 1 radius from the x and y
         paddle_rect = pygame.Rect(self.paddle_x, self.paddle_y, paddle_width, paddle_height)
 
-        # check if ball is off the bottom of the self.screen
+        # vérification si la balle touche le bas (perte)
         if self.ball_y > self.screen.get_height() - ball_radius:
-
             self.current_reward = STATES['Dead']
             self.iteration += 1
-            screen = 'Iteration: ' + repr(self.iteration) + ', max score: ' + repr(self.score) + ', hit count: ' + repr(
+            s = 'Iteration: ' + repr(self.iteration) + ', score : ' + repr(self.score) + ', hits: ' + repr(
                 self.paddle_hit_count)
 
-            if self.score > self.highScore:
-                self.highScore = self.score
-                screen += ' NEW HIGHSCORE!'
+            if self.score > self.highscore:
+                self.highscore = self.score
+                s += ' Nouveau score!'
 
-            print(screen)
+            print(s)
             self.resetGame()
 
-        # for screen border
+        # border de la vue
         if self.ball_y < ball_radius:
             self.ball_y = ball_radius
             self.ball_speed_y = -self.ball_speed_y
@@ -143,22 +143,20 @@ class Environment:
         if self.ball_x < ball_radius:
             self.ball_x = ball_radius
             self.ball_speed_x = -self.ball_speed_x
-
         if self.ball_x > self.screen.get_width() - ball_radius:
             self.ball_x = self.screen.get_width() - ball_radius
             self.ball_speed_x = -self.ball_speed_x
 
-        # for paddle
+        # le pagaye
         if ball_rect.colliderect(paddle_rect):
             self.ball_speed_y = -self.ball_speed_y
             self.current_reward = STATES['Hit']
             self.ball_hit_count += 1
             self.paddle_hit_count += 1
-            # if pygame.display.get_active():
 
             if len(self.bricks) == 0:
                 self.initBricks()
-        # for bricks
+        # les bricks
         for brick in self.bricks:
             if brick.rect.colliderect(ball_rect):
                 self.score = self.score + 1
@@ -193,66 +191,9 @@ class Environment:
 
         return True
 
-    def draw(self):
-        self.screen.fill(white)
-
-        score_label = self.myfont.render(str(self.score), 100, pygame.color.THECOLORS['black'])
-        self.screen.blit(score_label, (5, 10))
-
-        count_label = self.myfont.render(str(self.paddle_hit_count), 100, pygame.color.THECOLORS['grey'])
-        self.screen.blit(count_label, (70, 10))
-
-        if self.isAuto is True:
-            auto_label = self.myfont.render("Mode = Auto", 100, pygame.color.THECOLORS['blue'])
-            self.screen.blit(auto_label, (570, 10))
-        for brick in self.bricks:
-            pygame.draw.rect(self.screen, grey, brick.rect, 0)
-        pygame.draw.circle(self.screen, grey, [int(self.ball_x), int(self.ball_y)], ball_radius, 0)
-        pygame.draw.rect(self.screen, grey, [self.paddle_x, self.paddle_y, paddle_width, paddle_height], 0)
-
-        pygame.display.update()
-
-    def quit(self):
-        pygame.quit()
-
-    def saveData(self):
-        data = [int(self.iteration), int(self.highScore), self.Q]
-        return data
-
-
-@atexit.register
-def save():
-    savedata = game_run.saveData()
-    np.savez(fname, iter=savedata[0], high=savedata[1], trainedQ=savedata[2])
-    print("Data saved successfully.")
-
-
-class Agent:
-
-    def __init__(self):
-        self.bricks = []
-        self.ball_speed_y = 5
-        self.ball_speed_x = 3
-        self.ball_y = 450 - ball_radius
-        self.ball_x = 300
-        self.paddle_x = 470
-        self.paddle_y = 470
-        self.paddle_speed = 10
-        self.com_vec = 0
-        self.current_reward = STATES['Alive']
-        self.score = 0
-        self.ball_hit_count = 0
-        self.paddle_hit_count = 0
-        self.highScore = 0
-        self.isAuto = True
-        self.command = 0
-        self.iteration = 0
-        self.Q = np.zeros((int(1299 / resolution), int(490 / resolution), 3))
-        self.prev = [int((self.ball_x - self.paddle_x + 640) / resolution), int(self.ball_y / resolution)]
-
     def decision(self):
+        self.prev = [(self.ball_x - self.paddle_x + 640) / resolution, self.ball_y / resolution]
 
-        # Observe what state is in and perform the action that maximizes expected reward.
         actions = self.Q[int((self.ball_x - self.paddle_x + 640) / resolution), int(self.ball_y / resolution), :]
 
         maxs = [i for i, x in enumerate(actions) if x == np.argmax(actions)]
@@ -268,44 +209,81 @@ class Agent:
             self.command = com_command
 
         if self.command == 1:
+            # self.paddle_vec -= self.paddle_speed
             self.paddle_x -= self.paddle_speed
         elif self.command == 2:
+            # self.paddle_vec += self.paddle_speed
             self.paddle_x += self.paddle_speed
-
-        print(f"actions: {actions}")
-        print(f"maxs: {maxs}")
+        # else:
+        # if self.paddle_vec >0:
+        # self.paddle_vec -= self.paddle_speed
+        # elif self.paddle_vec < 0:
+        # self.paddle_vec += self.paddle_speed
 
     def observe(self):
-        prev_Q = self.Q[self.prev[0], self.prev[1], self.command]
+        prev_Q = self.Q[int(self.prev[0]), int(self.prev[1]), int(self.command)]
 
-        self.Q[self.prev[0], self.prev[1], self.command] = (
-                prev_Q + alpha * (self.current_reward + l *
-                                  max(self.Q[int(self.ball_x - self.paddle_x + 640 / resolution),
-                                      int(self.ball_y / resolution), :]) - prev_Q))
+        self.Q[int(self.prev[0]), int(self.prev[1]), int(self.command)] = (
+                prev_Q + alpha * (self.current_reward + lmbd *
+                                  max(self.Q[int((self.ball_x - self.paddle_x + 640) / resolution),
+                                      int(self.ball_y / resolution), :])
+                                  - prev_Q))
 
-if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        fname = str(sys.argv[1]).replace('.npz', '')
+    def draw(self):
+        self.screen.fill(grey_bc)
 
-        try:
-            data = np.load(str(fname) + '.npz')
-            game_run = Environment(data)
-            s = "Q loaded from " + str(fname) + " successfully."
-            print(s)
+        score_label = self.myfont.render(str(self.score), 100, pygame.color.THECOLORS['red'])
+        self.screen.blit(score_label, (5, 10))
 
-        except IOError:
-            s = "Error: can't find file or read data from " + str(fname) + ".npz, initializing a new Q matrix"
-            print(s)
-            game_run = Environment(None)
+        count_label = self.myfont.render(str(self.paddle_hit_count), 100, pygame.color.THECOLORS['blue'])
+        self.screen.blit(count_label, (70, 10))
 
-        agent = Agent()
-        # game loop
-        while game_run.input():
-            agent.decision()
-            game_run.update()
-            agent.observe()
-            game_run.draw()
+        if self.isAuto is True:
+            auto_label = self.myfont.render("", 100, pygame.color.THECOLORS['blue'])
+            self.screen.blit(auto_label, (570, 10))
+        for brick in self.bricks:
+            pygame.draw.rect(self.screen, brown_color, brick.rect, 0)
+        pygame.draw.circle(self.screen, brown_color, [int(self.ball_x), int(self.ball_y)], ball_radius, 0)
+        pygame.draw.rect(self.screen, brown_color, [self.paddle_x, self.paddle_y, paddle_width, paddle_height], 0)
 
-        game_run.quit()
-    else:
-        print('INPUT ERROR: no file name provided. Read README.md for help.')
+        pygame.display.update()
+
+    def quit(self):
+        pygame.quit()
+
+    def saveData(self):
+        data = [int(self.iteration), int(self.highscore), self.Q]
+        return data
+
+
+@atexit.register
+def save():
+    savedata = game.saveData()
+    np.savez(fname, iter=savedata[0], high=savedata[1], trainedQ=savedata[2])
+    print("Data saved successfully.")
+
+
+if len(sys.argv) > 1:
+    fname = str(sys.argv[1]).replace('.npz', '')
+
+    try:
+        data = np.load(str(fname) + '.npz')
+        game = Envirement(data)
+        s = "Q loaded from " + str(fname) + " successfully."
+        print(s)
+
+    except IOError:
+        s = "Error: can't find file or read data from " + str(fname) + ".npz, initializing a new Q matrix"
+        print(s)
+        game = Envirement(None)
+
+    # game loop
+    while game.input():
+        game.decision()
+        game.update()
+        game.observe()
+        game.draw()
+
+    game.quit()
+else:
+    print('INPUT ERROR: no file name provided. Read README.md for help.')
