@@ -40,7 +40,7 @@ class Brick:
         self.rect = pygame.Rect(self.x, self.y, block_width, block_height)
 
 
-class Environment:
+class Agent:
 
     def __init__(self):
         self.bricks = []
@@ -81,10 +81,8 @@ class Environment:
             self.command = com_command
 
         if self.command == 1:
-            # self.paddle_vec -= self.paddle_speed
             self.paddle_x -= self.paddle_speed
         elif self.command == 2:
-            # self.paddle_vec += self.paddle_speed
             self.paddle_x += self.paddle_speed
 
         print(f"actions: {actions}")
@@ -97,7 +95,6 @@ class Environment:
                 prev_Q + alpha * (self.current_reward + l *
                                   max(self.Q[int(self.ball_x - self.paddle_x + 640 / resolution),
                                       int(self.ball_y / resolution), :]) - prev_Q))
-
 
 
 # class Agent:
@@ -130,8 +127,7 @@ class Environment:
 #         self.screen = pygame.display.set_mode([640, 480])
 
 
-
-class Breakout:
+class Environment:
 
     def __init__(self, myData):
         self.highscore = 0
@@ -323,21 +319,21 @@ if len(sys.argv) > 1:
 
     try:
         data = np.load(str(fname) + '.npz')
-        game_run = Breakout(data)
+        game_run = Environment(data)
         s = "Q loaded from " + str(fname) + " successfully."
         print(s)
 
     except IOError:
         s = "Error: can't find file or read data from " + str(fname) + ".npz, initializing a new Q matrix"
         print(s)
-        game_run = Breakout(None)
+        game_run = Environment(None)
 
-    environment = Environment()
+    agent = Agent()
     # game loop
     while game_run.input():
-        environment.decision()
+        agent.decision()
         game_run.update()
-        environment.observe()
+        agent.observe()
         game_run.draw()
 
     game_run.quit()
